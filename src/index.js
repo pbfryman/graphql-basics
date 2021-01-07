@@ -135,7 +135,7 @@ const resolvers = {
       return {
         id: '123098',
         name: 'Julie',
-        email: 'julie.j@gmail.com',
+        email: 'julie@example.com',
         age: 25
       }
     },

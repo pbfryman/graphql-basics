@@ -1,4 +1,5 @@
 import { GraphQLServer } from 'graphql-yoga'
+import { v4 as uuidv4, v4 } from 'uuid'
 
 // Scalar Types - String, Boolean, Int, Float, ID
 
@@ -79,6 +80,31 @@ const typeDefs = `
     post: Post!
   }
 
+  type Mutation {
+    createUser(data: CreateUserInput!): User!
+    createPost(data: CreatePostInput!): Post!
+    createComment(data: CreateCommentInput!): Comment!
+  }
+
+  input CreateUserInput {
+    name: String!
+    email: String!
+    age: Int
+  }
+
+  input CreatePostInput {
+    title: String!
+    body: String!
+    published: Boolean!
+    author: ID!
+  }
+
+  input CreateCommentInput {
+    text: String!
+    author: ID!
+    post: ID!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -146,6 +172,70 @@ const resolvers = {
         body: 'This is the body',
         published: true
       }
+    }
+  },
+  Mutation: {
+    createUser(parent, args, context, info) {
+      const emailTaken = users.some((user) => {
+        return user.email === args.data.email
+      })
+
+      if (emailTaken) {
+        throw new Error('Email taken.')
+      }
+
+      const user = {
+        id: v4(),
+        ...args.data
+      }
+
+      users.push(user)
+
+      return user
+    },
+    createPost(parent, args, context, info) {
+      const userExists = users.some((user) => {
+        return user.id === args.data.author
+      })
+
+      if(!userExists) {
+        throw new Error('User not found')
+      }
+
+      const post = {
+        id: v4(),
+        ...args.data
+      }
+
+      posts.push(post)
+
+      return post
+    },
+    createComment(parent, args, context, info) {
+      const userExists = users.some((user) => {
+        return user.id === args.data.author
+      })
+
+      const postExists = posts.some((post) => {
+        return post.id === args.data.post
+      })
+
+      if (!userExists) {
+        throw new Error('User not found')
+      }
+
+      if (!postExists) {
+        throw new Error('Post not found')
+      }
+
+      const comment = {
+        id: v4(),
+        ...args.data
+      }
+
+      comments.push(comment)
+
+      return comment
     }
   },
   Post: {
